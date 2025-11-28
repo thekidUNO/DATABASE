@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TXT Vault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Supabase JS CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-soft: #0b1220;
+      --card: #020617;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.1);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #111827, #020617);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 980px;
+      background: var(--bg-soft);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 20px 18px 22px;
+      box-shadow: 0 22px 45px rgba(0, 0, 0, 0.7);
+    }
+
+    @media (min-width: 768px) {
+      .app {
+        padding: 22px 24px 26px;
+      }
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(34, 197, 94, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px 12px 14px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .card-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    select {
+      width: 100%;
+      padding: 8px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.83rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--accent);
+      color: #022c22;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, filter 0.1s ease;
+      margin-top: 4px;
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.99);
+      filter: brightness(0.95);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn[disabled] {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+      filter: none;
+    }
+
+    .status {
+      font-size: 0.73rem;
+      margin-top: 5px;
+      min-height: 1em;
+    }
+
+    .status.ok {
+      color: var(--accent);
+    }
+
+    .status.err {
+      color: var(--danger);
+    }
+
+    .list-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      font-size: 0.75rem;
+    }
+
+    .pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      color: var(--muted);
+      background: #020617;
+      user-select: none;
+    }
+
+    .pill.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.8);
+    }
+
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+    }
+
+    .search input {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.8rem;
+      width: 100%;
+      outline: none;
+    }
+
+    .search span {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .items {
+      max-height: 380px;
+      overflow: auto;
+      padding-right: 4px;
+      margin-top: 4px;
+    }
+
+    .item {
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      padding: 7px 8px;
+      margin-bottom: 6px;
+      background: rgba(15, 23, 42, 0.95);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 6px;
+    }
+
+    .item-check {
+      display: flex;
+      align-items: flex-start;
+      padding-top: 2px;
+    }
+
+    .item-check input {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .item-main {
+      min-width: 0;
+    }
+
+    .item-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 1px;
+    }
+
+    .item-name {
+      font-size: 0.83rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-category {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(34, 197, 94, 0.7);
+      white-space: nowrap;
+    }
+
+    .item-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .item-snippet {
+      font-size: 0.75rem;
+      color: #e5e7eb;
+      max-height: 3.1em;
+      overflow: hidden;
+      white-space: pre-wrap;
+    }
+
+    .item-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4px;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .item-btn {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .item-btn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 18px;
+    }
+
+    .merge-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    /* Viewer modal */
+    .viewer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .viewer-box {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      width: 95%;
+      max-width: 880px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 10px 12px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .viewer-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .viewer-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .viewer-close {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 4px 6px;
+      border-radius: 999px;
+    }
+
+    .viewer-close:hover {
+      background: rgba(148, 163, 184, 0.15);
+    }
+
+    .viewer-searchbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      margin-bottom: 6px;
+    }
+
+    .viewer-searchbar input {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.8rem;
+      width: 100%;
+      outline: none;
+    }
+
+    .viewer-search-controls {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .viewer-nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .viewer-nav-btn:hover {
+      background: rgba(148, 163, 184, 0.15);
+    }
+
+    .viewer-content {
+      flex: 1;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      background: rgba(15, 23, 42, 0.95);
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      line-height: 1.3;
+    }
+
+    .match {
+      background: rgba(250, 204, 21, 0.35);
+      border-radius: 2px;
+    }
+
+    .match-active {
+      background: rgba(250, 204, 21, 0.85);
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <div class="title">TXT Vault</div>
+        <div class="subtitle">Upload, tag, merge, download.</div>
+      </div>
+      <span class="badge">Supabase</span>
+    </div>
+
+    <div class="grid">
+      <!-- Upload panel -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Upload TXT</div>
+            <div class="card-sub">Store content as plain text.</div>
+          </div>
+        </div>
+
+        <form id="uploadForm">
+          <div class="row">
+            <div>
+              <label for="fileInput">File</label>
+              <input id="fileInput" type="file" accept=".txt,text/plain" required />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="categoryInput">Category</label>
+              <input id="categoryInput" type="text" placeholder="e.g. notes" required />
+            </div>
+            <div>
+              <label for="titleInput">Title (optional)</label>
+              <input id="titleInput" type="text" placeholder="If empty: filename" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn">Save</button>
+          <div id="uploadStatus" class="status"></div>
+        </form>
+      </div>
+
+      <!-- List + merge panel -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Files</div>
+            <div class="card-sub">Select multiple to merge.</div>
+          </div>
+          <div>
+            <button id="refreshBtn" class="btn btn-secondary" type="button">Reload</button>
+          </div>
+        </div>
+
+        <div class="list-header">
+          <div class="pill-row" id="categoryPills">
+            <div class="pill active" data-cat="">All</div>
+          </div>
+          <div class="search">
+            <span>🔍</span>
+            <input id="searchInput" type="text" placeholder="Search…" />
+          </div>
+        </div>
+
+        <div class="merge-bar">
+          <button id="mergeBtn" class="btn btn-secondary" type="button" disabled>
+            Merge selected
+          </button>
+          <div id="mergeStatus" class="status" style="margin-top:0;"></div>
+        </div>
+
+        <div id="listStatus" class="status"></div>
+        <div id="items" class="items"></div>
+        <div id="emptyState" class="empty" style="display: none;">
+          No files yet.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Viewer modal -->
+  <div id="viewerOverlay" class="viewer-overlay">
+    <div id="viewerBox" class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <div id="viewerTitle" class="viewer-title"></div>
+          <div id="viewerMeta" class="viewer-sub"></div>
+        </div>
+        <button id="viewerCloseBtn" class="viewer-close">✕</button>
+      </div>
+
+      <div class="viewer-searchbar">
+        <input
+          id="viewerSearchInput"
+          type="text"
+          placeholder="Search / keywords (comma-separated for filter)…"
+        />
+        <div class="viewer-search-controls">
+          <button id="viewerPrevBtn" class="viewer-nav-btn" type="button">Prev</button>
+          <button id="viewerNextBtn" class="viewer-nav-btn" type="button">Next</button>
+          <button id="viewerFilterDownloadBtn" class="viewer-nav-btn" type="button">
+            Filter &amp; Download
+          </button>
+          <span id="viewerMatchInfo">0 / 0</span>
+        </div>
+      </div>
+
+      <div id="viewerContent" class="viewer-content"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==============================
+    // 1. Supabase client setup
+    // ==============================
+    const SUPABASE_URL = "https://kikemujohyyfisngfixr.supabase.co";   // <-- replace
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpa2VtdWpvaHl5ZmlzbmdmaXhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNDM5OTksImV4cCI6MjA3OTkxOTk5OX0.ING3jkhQv6QXpoHZniqz4zlNIMvqzC_Q-mrtoIhRGwM";              // <-- replace
+
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==============================
+    // 2. DOM elements
+    // ==============================
+    const uploadForm = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const categoryInput = document.getElementById("categoryInput");
+    const titleInput = document.getElementById("titleInput");
+    const uploadStatus = document.getElementById("uploadStatus");
+
+    const itemsContainer = document.getElementById("items");
+    const emptyState = document.getElementById("emptyState");
+    const listStatus = document.getElementById("listStatus");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const categoryPills = document.getElementById("categoryPills");
+    const searchInput = document.getElementById("searchInput");
+
+    const mergeBtn = document.getElementById("mergeBtn");
+    const mergeStatus = document.getElementById("mergeStatus");
+
+    // viewer
+    const viewerOverlay = document.getElementById("viewerOverlay");
+    const viewerTitle = document.getElementById("viewerTitle");
+    const viewerMeta = document.getElementById("viewerMeta");
+    const viewerCloseBtn = document.getElementById("viewerCloseBtn");
+    const viewerSearchInput = document.getElementById("viewerSearchInput");
+    const viewerContent = document.getElementById("viewerContent");
+    const viewerPrevBtn = document.getElementById("viewerPrevBtn");
+    const viewerNextBtn = document.getElementById("viewerNextBtn");
+    const viewerMatchInfo = document.getElementById("viewerMatchInfo");
+    const viewerFilterDownloadBtn = document.getElementById("viewerFilterDownloadBtn");
+
+    let allItems = [];
+    let activeCategory = "";
+    let searchQuery = "";
+    let selectedIds = new Set();
+
+    let currentViewItem = null;
+    let viewerCurrentIndex = -1;
+
+    // ==============================
+    // 3. Helpers
+    // ==============================
+    function setUploadStatus(msg, type = "") {
+      uploadStatus.textContent = msg || "";
+      uploadStatus.className = "status " + (type || "");
+    }
+
+    function setListStatus(msg, type = "") {
+      listStatus.textContent = msg || "";
+      listStatus.className = "status " + (type || "");
+    }
+
+    function setMergeStatus(msg, type = "") {
+      mergeStatus.textContent = msg || "";
+      mergeStatus.className = "status " + (type || "");
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      return d.toLocaleString();
+    }
+
+    // merge helper: insert addText after last empty line of baseText
+    function mergeInto(baseText, addText) {
+      const lines = baseText.split("\n");
+      let insertIndex = lines.length - 1;
+
+      while (insertIndex >= 0 && lines[insertIndex].trim() !== "") {
+        insertIndex--;
+      }
+
+      if (insertIndex < 0) {
+        return baseText + "\n\n" + addText;
+      }
+
+      const top = lines.slice(0, insertIndex + 1).join("\n");
+      return top + "\n" + addText;
+    }
+
+    function buildCategoryPills() {
+      const cats = new Set();
+      allItems.forEach((item) => {
+        if (item.category) cats.add(item.category);
+      });
+
+      categoryPills.innerHTML = "";
+      const makePill = (label, cat) => {
+        const div = document.createElement("div");
+        div.className = "pill" + (activeCategory === cat ? " active" : "");
+        div.dataset.cat = cat;
+        div.textContent = label;
+        div.addEventListener("click", () => {
+          activeCategory = cat;
+          buildCategoryPills();
+          renderItems();
+        });
+        return div;
+      };
+
+      categoryPills.appendChild(makePill("All", ""));
+      cats.forEach((c) => {
+        categoryPills.appendChild(makePill(c, c));
+      });
+    }
+
+    function updateMergeButtonState() {
+      mergeBtn.disabled = selectedIds.size < 2;
+    }
+
+    function downloadTextFile(filename, content) {
+      const blob = new Blob([content || ""], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || "file.txt";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+      });
+    }
+
+    // ==============================
+    // Viewer / in-file search
+    // ==============================
+    function openViewer(item) {
+      currentViewItem = item;
+      viewerTitle.textContent = item.filename || "(untitled)";
+      viewerMeta.textContent = `${item.category || "uncategorized"} • ${formatDate(
+        item.created_at
+      )}`;
+      viewerSearchInput.value = "";
+      viewerMatchInfo.textContent = "0 / 0";
+      viewerCurrentIndex = -1;
+      viewerContent.textContent = item.content || "";
+      viewerOverlay.style.display = "flex";
+      viewerSearchInput.focus();
+    }
+
+    function closeViewer() {
+      viewerOverlay.style.display = "none";
+      currentViewItem = null;
+      viewerContent.textContent = "";
+      viewerSearchInput.value = "";
+      viewerMatchInfo.textContent = "0 / 0";
+      viewerCurrentIndex = -1;
+    }
+
+    function updateViewerSearch() {
+      if (!currentViewItem) return;
+      const term = viewerSearchInput.value;
+      const raw = currentViewItem.content || "";
+
+      if (!term) {
+        viewerContent.textContent = raw;
+        viewerMatchInfo.textContent = "0 / 0";
+        viewerCurrentIndex = -1;
+        return;
+      }
+
+      const esc = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(esc, "gi");
+
+      let lastIndex = 0;
+      let result;
+      let out = "";
+      let count = 0;
+
+      while ((result = regex.exec(raw)) !== null) {
+        const start = result.index;
+        const end = start + result[0].length;
+        out += escapeHtml(raw.slice(lastIndex, start));
+        out += `<span class="match">${escapeHtml(result[0])}</span>`;
+        lastIndex = end;
+        count++;
+      }
+      out += escapeHtml(raw.slice(lastIndex));
+      viewerContent.innerHTML = out || "&nbsp;";
+
+      if (count === 0) {
+        viewerMatchInfo.textContent = "0 / 0";
+        viewerCurrentIndex = -1;
+        return;
+      }
+
+      viewerCurrentIndex = 0;
+      highlightActiveMatch();
+      viewerMatchInfo.textContent = `1 / ${count}`;
+    }
+
+    function highlightActiveMatch() {
+      const spans = viewerContent.querySelectorAll("span.match");
+      const total = spans.length;
+      if (!total) {
+        viewerMatchInfo.textContent = "0 / 0";
+        return;
+      }
+      if (viewerCurrentIndex < 0) viewerCurrentIndex = 0;
+      if (viewerCurrentIndex >= total) viewerCurrentIndex = total - 1;
+
+      spans.forEach((s) => s.classList.remove("match-active"));
+      const active = spans[viewerCurrentIndex];
+      if (active) {
+        active.classList.add("match-active");
+        active.scrollIntoView({ block: "center" });
+      }
+      viewerMatchInfo.textContent = `${viewerCurrentIndex + 1} / ${total}`;
+    }
+
+    function viewerNext() {
+      const spans = viewerContent.querySelectorAll("span.match");
+      if (!spans.length) return;
+      viewerCurrentIndex = (viewerCurrentIndex + 1) % spans.length;
+      highlightActiveMatch();
+    }
+
+    function viewerPrev() {
+      const spans = viewerContent.querySelectorAll("span.match");
+      if (!spans.length) return;
+      viewerCurrentIndex = (viewerCurrentIndex - 1 + spans.length) % spans.length;
+      highlightActiveMatch();
+    }
+
+    // ==============================
+    // Filter & Download (Python-style keywords)
+    // ==============================
+    viewerFilterDownloadBtn.addEventListener("click", () => {
+      if (!currentViewItem) return;
+
+      const rawTerm = viewerSearchInput.value.trim();
+      if (!rawTerm) {
+        alert("Enter at least one keyword first.");
+        return;
+      }
+
+      // comma-separated keywords
+      const keywords = rawTerm
+        .split(",")
+        .map((k) => k.trim().toLowerCase())
+        .filter(Boolean);
+
+      if (!keywords.length) {
+        alert("No valid keywords found. Use comma-separated keywords.");
+        return;
+      }
+
+      const raw = currentViewItem.content || "";
+      const lines = raw.split(/\r?\n/);
+      const outLines = [];
+
+      for (const line of lines) {
+        const lower = line.toLowerCase();
+        if (keywords.some((kw) => kw && lower.includes(kw))) {
+          outLines.push(line);
+        }
+      }
+
+      if (!outLines.length) {
+        alert("No matching lines found for these keywords.");
+        return;
+      }
+
+      const filteredContent = outLines.join("\n");
+
+      // build output filename similar to Python tool
+      const baseName = (currentViewItem.filename || "file").replace(/\.txt$/i, "");
+      const now = new Date();
+      const ts = now.toISOString().replace(/[-:T]/g, "").slice(0, 14); // YYYYMMDDHHMMSS
+      const fileName = `${baseName}_filtered_${ts}.txt`;
+
+      downloadTextFile(fileName, filteredContent);
+    });
+
+    // ==============================
+    // render list based on filters
+    // ==============================
+    function renderItems() {
+      itemsContainer.innerHTML = "";
+      const normalizedQuery = searchQuery.trim().toLowerCase();
+
+      let filtered = allItems.filter((item) => {
+        if (activeCategory && item.category !== activeCategory) return false;
+        if (!normalizedQuery) return true;
+        const haystack =
+          (item.filename || "") +
+          " " +
+          (item.category || "") +
+          " " +
+          (item.content || "");
+        return haystack.toLowerCase().includes(normalizedQuery);
+      });
+
+      if (!filtered.length) {
+        emptyState.style.display = "block";
+        return;
+      } else {
+        emptyState.style.display = "none";
+      }
+
+      filtered.forEach((item) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "item";
+
+        const checkBoxWrap = document.createElement("div");
+        checkBoxWrap.className = "item-check";
+
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = selectedIds.has(item.id);
+        check.addEventListener("change", () => {
+          if (check.checked) {
+            selectedIds.add(item.id);
+          } else {
+            selectedIds.delete(item.id);
+          }
+          updateMergeButtonState();
+        });
+
+        checkBoxWrap.appendChild(check);
+
+        const main = document.createElement("div");
+        main.className = "item-main";
+
+        const heading = document.createElement("div");
+        heading.className = "item-heading";
+
+        const name = document.createElement("div");
+        name.className = "item-name";
+        name.textContent = item.filename || "(untitled)";
+
+        const cat = document.createElement("div");
+        cat.className = "item-category";
+        cat.textContent = item.category || "uncategorized";
+
+        heading.appendChild(name);
+        heading.appendChild(cat);
+
+        const meta = document.createElement("div");
+        meta.className = "item-meta";
+        meta.textContent = formatDate(item.created_at);
+
+        const snippet = document.createElement("div");
+        snippet.className = "item-snippet";
+        snippet.textContent = (item.content || "").slice(0, 280);
+
+        const actions = document.createElement("div");
+        actions.className = "item-actions";
+
+        const viewBtn = document.createElement("button");
+        viewBtn.className = "item-btn";
+        viewBtn.textContent = "Open";
+        viewBtn.addEventListener("click", () => {
+          openViewer(item);
+        });
+
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "item-btn";
+        copyBtn.textContent = "Copy";
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(item.content || "");
+            setListStatus("Copied ✓", "ok");
+            setTimeout(() => setListStatus(""), 1100);
+          } catch {
+            setListStatus("Clipboard blocked", "err");
+          }
+        });
+
+        const dlBtn = document.createElement("button");
+        dlBtn.className = "item-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.addEventListener("click", () => {
+          const fname = item.filename?.endsWith(".txt")
+            ? item.filename
+            : `${item.filename || "file"}.txt`;
+          downloadTextFile(fname, item.content || "");
+        });
+
+        actions.appendChild(viewBtn);
+        actions.appendChild(copyBtn);
+        actions.appendChild(dlBtn);
+
+        main.appendChild(heading);
+        main.appendChild(meta);
+        main.appendChild(snippet);
+        main.appendChild(actions);
+
+        itemDiv.appendChild(checkBoxWrap);
+        itemDiv.appendChild(main);
+
+        itemsContainer.appendChild(itemDiv);
+      });
+    }
+
+    // ==============================
+    // 4. Load items from Supabase
+    // ==============================
+    async function loadItems() {
+      setListStatus("Loading…");
+      emptyState.style.display = "none";
+      selectedIds.clear();
+      updateMergeButtonState();
+      setMergeStatus("");
+
+      const { data, error } = await db
+        .from("text_files")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        setListStatus("Error: " + error.message, "err");
+        allItems = [];
+        renderItems();
+        return;
+      }
+
+      allItems = data || [];
+      setListStatus(`Loaded ${allItems.length} file(s).`, "ok");
+      buildCategoryPills();
+      renderItems();
+    }
+
+    // ==============================
+    // 5. Upload handler
+    // ==============================
+    uploadForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setUploadStatus("");
+
+      const file = fileInput.files[0];
+      const cat = categoryInput.value.trim();
+      const customTitle = titleInput.value.trim();
+
+      if (!file) {
+        setUploadStatus("Select a file.", "err");
+        return;
+      }
+      if (!cat) {
+        setUploadStatus("Set a category.", "err");
+        return;
+      }
+
+      const filename = customTitle || file.name || "untitled.txt";
+      setUploadStatus("Reading…");
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const content = reader.result || "";
+        setUploadStatus("Saving…");
+
+        const { data, error } = await db
+          .from("text_files")
+          .insert({
+            filename,
+            category: cat,
+            content,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error(error);
+          setUploadStatus("Error: " + error.message, "err");
+          return;
+        }
+
+        setUploadStatus("Saved ✓", "ok");
+        allItems.unshift(data);
+        buildCategoryPills();
+        renderItems();
+
+        fileInput.value = "";
+        titleInput.value = "";
+      };
+
+      reader.onerror = () => {
+        setUploadStatus("Read failed.", "err");
+      };
+
+      reader.readAsText(file);
+    });
+
+    // ==============================
+    // 6. List controls
+    // ==============================
+    refreshBtn.addEventListener("click", () => {
+      loadItems();
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value || "";
+      renderItems();
+    });
+
+    mergeBtn.addEventListener("click", async () => {
+      setMergeStatus("");
+      const ids = Array.from(selectedIds);
+      if (ids.length < 2) return;
+
+      const selectedItems = allItems.filter((item) => ids.includes(item.id));
+
+      if (selectedItems.length < 2) {
+        setMergeStatus("Not enough files.", "err");
+        return;
+      }
+
+      setMergeStatus("Merging…");
+      let mergedContent = selectedItems[0].content || "";
+
+      for (let i = 1; i < selectedItems.length; i++) {
+        mergedContent = mergeInto(mergedContent, selectedItems[i].content || "");
+      }
+
+      const nameParts = selectedItems
+        .map((i) => i.filename || "file")
+        .slice(0, 3)
+        .join("_");
+      const newName =
+        "Merged_" +
+        nameParts +
+        (nameParts.toLowerCase().endsWith(".txt") ? "" : ".txt");
+
+      const { data, error } = await db
+        .from("text_files")
+        .insert({
+          filename: newName,
+          category: "merged",
+          content: mergedContent,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error(error);
+        setMergeStatus("Error: " + error.message, "err");
+        return;
+      }
+
+      allItems.unshift(data);
+      buildCategoryPills();
+      renderItems();
+
+      setMergeStatus("Merged ✓", "ok");
+      setTimeout(() => setMergeStatus(""), 1200);
+    });
+
+    // viewer events
+    viewerCloseBtn.addEventListener("click", closeViewer);
+    viewerOverlay.addEventListener("click", (e) => {
+      if (e.target === viewerOverlay) {
+        closeViewer();
+      }
+    });
+
+    viewerSearchInput.addEventListener("input", () => {
+      updateViewerSearch();
+    });
+
+    viewerNextBtn.addEventListener("click", () => {
+      viewerNext();
+    });
+
+    viewerPrevBtn.addEventListener("click", () => {
+      viewerPrev();
+    });
+
+    // Initial load
+    loadItems();
+  </script>
+</body>
+</html>
